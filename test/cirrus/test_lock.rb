@@ -3,44 +3,64 @@ require 'minitest_helper'
 class TestLock < MiniTest::Unit::TestCase
 
   def setup
-    Redis.new.flushall
+    @redis = Redis.new
+    @redis.flushall
   end
 
-  def test_initializer_generates_a_key
-    lock = Cirrus::Lock.new('foo', 'bar')
-    assert_equal lock.key, 'foo_bar'
+  def test_lock_generates_an_id
+    Cirrus::Lock.new(@redis, :foo).id.wont_be_nil
   end
 
-  def test_initializer_generates_an_id
-    lock = Cirrus::Lock.new('foo', 'bar')
-    lock.id.wont_be_nil
+  def test_lock_sets_up_redis
+    Cirrus::Lock.new(@redis, :foo).redis.wont_be_nil
   end
 
-  def test_sets_lock
-    lock = Cirrus::Lock.new('foo', 'bar')
-    assert_equal lock.set, true
+  def test_lock_sets_up_values
+    assert_equal([:foo, :bar], Cirrus::Lock.new(@redis, :foo, :bar).values)
   end
 
-  def test_release_lock
-    lock = Cirrus::Lock.new('foo', 'bar')
-    assert_equal lock.set, true
-    assert_equal lock.release, true
+  def test_set_returns_true
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
+
+    assert_equal(true, lock.set)
   end
 
-  def test_locked_is_true
-    lock = Cirrus::Lock.new('foo', 'bar')
+  def test_set_returns_false_if_it_is_already_set
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
     lock.set
 
-    assert_equal lock.locked?, true
+    assert_equal(false, lock.set)
   end
 
-  def test_locked_is_false
-    lock = Cirrus::Lock.new('foo', 'bar')
+  def test_release_frees_the_lock
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
     lock.set
-    assert_equal lock.locked?, true
+    assert_equal(true, lock.release)
+  end
+
+  def test_release_returns_false
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
+    assert_equal(false, lock.release)
+  end
+
+  def test_release_frees_the_lock
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
+    lock.set
 
     lock.release
-    assert_equal lock.locked?, false
+    assert_equal(false, lock.locked?)
+  end
+
+  def test_locked_returns_true
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
+    lock.set
+
+    assert_equal(true, lock.locked?)
+  end
+
+  def test_locked_returns_false
+    lock = Cirrus::Lock.new(@redis, :foo, :bar)
+    assert_equal(false, lock.locked?)
   end
 
 end

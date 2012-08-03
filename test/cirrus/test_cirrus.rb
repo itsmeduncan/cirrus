@@ -2,11 +2,13 @@ require 'minitest_helper'
 
 class TestCirrus < MiniTest::Unit::TestCase
 
-  def test_setting_of_the_store
-    redis         = Redis.new
-    Cirrus.store  = redis
+  def setup
+    @redis = Redis.new
+    @redis.flushall
+  end
 
-    assert_equal Cirrus.store, redis
+  def test_cirrus_runs_the_block
+    assert_equal(:foo, Cirrus.lock(@redis, 1,2) { :foo })
   end
 
 end

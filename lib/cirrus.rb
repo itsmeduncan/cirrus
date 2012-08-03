@@ -4,17 +4,16 @@ require "securerandom"
 require "redis"
 
 require "cirrus/version"
-require "cirrus/key"
 require "cirrus/lock"
 
 module Cirrus
 
-  def self.store
-    @@store
-  end
+  def self.lock(redis, *ids)
+    lock = Cirrus::Lock.new(redis, ids)
 
-  def self.store=(redis)
-    @@store = redis
+    lock.set
+
+    yield.tap { |_| lock.release }
   end
 
 end
