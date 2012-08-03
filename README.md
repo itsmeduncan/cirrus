@@ -1,4 +1,4 @@
-# Cirrus
+# Cirrus ![Travis-CI status](https://secure.travis-ci.org/itsmeduncan/cirrus.png)
 
 A simple tool that leverages Redis to allow you to safetly lock your blocks of code
 
