@@ -17,4 +17,12 @@ class TestCirrus < MiniTest::Unit::TestCase
     }.must_raise Cirrus::UnlockableException
   end
 
+  def test_it_releases_if_there_is_an_error
+    lambda {
+      Cirrus.lock(@redis, 1, 2) { raise ArgumentError }
+    }.must_raise ArgumentError
+
+    assert_equal(:foo, Cirrus.lock(@redis, 1, 2) { :foo })
+  end
+
 end
